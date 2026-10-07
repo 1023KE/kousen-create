@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>高専祭 組立スケジュール</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 30px;
+    color: #222;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+}
+
+h1 {
+    margin-top: 0;
+}
+
+
+/* =========================
+   メニュー
+========================= */
+
+.menu {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.menu button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #222;
+    color: white;
+}
+
+.menu button:hover {
+    opacity: 0.8;
+}
+
+
+/* =========================
+   日付
+========================= */
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.day {
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.day:hover {
+    background: #eee;
+}
+
+.day.selected {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+
+/* =========================
+   班
+========================= */
+
+.team {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.team h2 {
+    margin-top: 0;
+}
+
+.member {
+    display: inline-block;
+    padding: 7px 10px;
+    margin: 4px;
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+.member.leader {
+    background: #fff0a8;
+    border: 1px solid #e0c000;
+}
+
+.count {
+    color: #777;
+    font-size: 14px;
+}
+
+
+/* =========================
+   管理者画面
+========================= */
+
+#adminPage {
+    display: none;
+}
+
+.adminBox {
+    background: #f7f7f7;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.adminTeam {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.adminTeam h3 {
+    margin-top: 0;
+}
+
+.adminTeam select {
+    width: 100%;
+    max-width: 450px;
+    padding: 9px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+}
+
+input,
+select {
+    padding: 9px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+}
+
+input[type="text"] {
+    width: 100%;
+    max-width: 450px;
+}
+
+.addButton {
+    margin-top: 15px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #222;
+    color: white;
+    cursor: pointer;
+}
+
+.addButton:hover {
+    opacity: 0.8;
+}
+
+.backButton {
+    margin-bottom: 20px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #ddd;
+}
+
+
+/* =========================
+   参加可能日
+========================= */
+
+.dayChecks {
+    margin-top: 10px;
+}
+
+.dayChecks label {
+    margin-right: 15px;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+
+/* =========================
+   ログ
+========================= */
+
+.log {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+}
+
+.logTime {
+    color: #777;
+    font-size: 13px;
+}
+
+.logMessage {
+    margin-top: 4px;
+}
+
+.notice {
+    background: #fff3cd;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+
+/* =========================
+   スマホ対応
+========================= */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .days {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+    }
+
+    .day {
+        padding: 10px 3px;
+        font-size: 14px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<!-- ==================================================
+     通常画面
+================================================== -->
+
+<div id="mainPage">
+
+    <div class="menu">
+
+        <button onclick="openAdmin()">
+            ⚙ 管理者
+        </button>
+
+    </div>
+
+
+    <h1>
+        高専祭 組立スケジュール
+    </h1>
+
+
+    <p id="selectedDate">
+        10月19日
+    </p>
+
+
+    <!-- 日付 -->
+
+    <div class="days">
+
+        <button
+            class="day selected"
+            onclick="showDay('19', this)">
+            19日
+        </button>
+
+        <button
+            class="day"
+            onclick="showDay('20', this)">
+            20日
+        </button>
+
+        <button
+            class="day"
+            onclick="showDay('21', this)">
+            21日
+        </button>
+
+        <button
+            class="day"
+            onclick="showDay('22', this)">
+            22日
+        </button>
+
+        <button
+            class="day"
+            onclick="showDay('23', this)">
+            23日
+        </button>
+
+    </div>
+
+
+    <!-- 班表示 -->
+
+    <div id="schedule"></div>
+
+</div>
+
+
+
+<!-- ==================================================
+     管理者画面
+================================================== -->
+
+<div id="adminPage">
+
+
+    <button
+        class="backButton"
+        onclick="closeAdmin()">
+
+        ← スケジュールに戻る
+
+    </button>
+
+
+    <h1>
+        ⚙ 管理者ページ
+    </h1>
+
+
+    <div class="notice">
+
+        ここではリーダー設定、
+        メンバー追加、操作ログの確認ができます。
+
+    </div>
+
+
+
+    <!-- ==================================================
+         リーダー設定
+    ================================================== -->
+
+    <div class="adminBox">
+
+        <h2>
+            👑 リーダー設定
+        </h2>
+
+        <p>
+            各班のリーダーを選択してください。
+        </p>
+
+        <div id="leaderSettings"></div>
+
+    </div>
+
+
+
+    <!-- ==================================================
+         メンバー追加
+    ================================================== -->
+
+    <div class="adminBox">
+
+        <h2>
+            ➕ メンバー追加
+        </h2>
+
+
+        <p>
+            番号
+        </p>
+
+        <input
+            type="text"
+            id="newNumber"
+            placeholder="例：42"
+        >
+
+
+        <p>
+            名前
+        </p>
+
+        <input
+            type="text"
+            id="newName"
+            placeholder="例：山田太郎"
+        >
+
+
+        <p>
+            所属班
+        </p>
+
+        <select id="newTeam"></select>
+
+
+        <p>
+            参加可能日
+        </p>
+
+
+        <div class="dayChecks">
+
+            <label>
+                <input
+                    type="checkbox"
+                    value="19">
+                19日
+            </label>
+
+            <label>
+                <input
+                    type="checkbox"
+                    value="20">
+                20日
+            </label>
+
+            <label>
+                <input
+                    type="checkbox"
+                    value="21">
+                21日
+            </label>
+
+            <label>
+                <input
+                    type="checkbox"
+                    value="22">
+                22日
+            </label>
+
+            <label>
+                <input
+                    type="checkbox"
+                    value="23">
+                23日
+            </label>
+
+        </div>
+
+
+        <button
+            class="addButton"
+            onclick="addMember()">
+
+            人を追加
+
+        </button>
+
+    </div>
+
+
+
+    <!-- ==================================================
+         操作ログ
+    ================================================== -->
+
+    <div class="adminBox">
+
+        <h2>
+            📋 操作ログ
+        </h2>
+
+
+       
+
+        <div id="logList"></div>
+
+    </div>
+
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+
+/* ==================================================
+   初期班データ
+================================================== */
+
+let teams = {
+
+    "🟦 カップ壁班": [
+
+        ["09", "加藤陽太",
+            ["19","20","21","22","23"]],
+
+        ["37", "安村美里",
+            ["19","20","23"]],
+
+        ["07", "大森悠吾",
+            ["19","20","21","22","23"]],
+
+        ["08", "奥野壱太",
+            ["20","21","23"]],
+
+        ["21", "竹中華音",
+            ["19","20","21","22","23"]],
+
+        ["41", "鷲見洋昭",
+            ["19","20","21","22"]],
+
+        ["38", "山縣透志",
+            ["23"]]
+
+    ],
+
+
+    "🟩 キャスター取付班": [
+
+        ["02", "井野結翔",
+            ["19","21","23"]],
+
+        ["11", "倉澤武流",
+            ["19","20","21","22","23"]],
+
+        ["01", "伊藤彰佑",
+            ["19","21","23"]],
+
+        ["24", "豊川珠生",
+            ["19","20","21","22","23"]],
+
+        ["26", "中西羚",
+            ["19","20","21","22","23"]],
+
+        ["30", "牧瀬拓真",
+            ["19","20","21","22","23"]]
+
+    ],
+
+
+    "🟨 カップ本体班": [
+
+        ["33", "宮城光翔",
+            ["19","20","21","22","23"]],
+
+        ["19", "薗伶士",
+            ["19","23"]],
+
+        ["34", "森吉絢也",
+            ["20"]],
+
+        ["13", "小谷飛夢",
+            ["19","20","21","22","23"]],
+
+        ["35", "安田幸ノ介",
+            ["22"]],
+
+        ["22", "田邉陸",
+            ["20","21"]]
+
+    ],
+
+
+    "🟥 骨組み・手押し部分班": [
+
+        ["03", "井上幹士",
+            ["20"]],
+
+        ["23", "角田篤人",
+            ["19","20","21","22","23"]],
+
+        ["28", "東山貴洸",
+            ["19","20","21","22","23"]],
+
+        ["39", "山下颯",
+            ["19","20","21","22"]],
+
+        ["40", "山中零",
+            ["19","20","21","22","23"]],
+
+        ["20", "田井咲瑠",
+            ["19","21","22","23"]]
+
+    ],
+
+
+    "🟪 補助・全体組立班": [
+
+        ["14", "小林篤史",
+            ["19","20","21","22","23"]],
+
+        ["10", "楠太嘉",
+            ["19","20","21","22","23"]],
+
+        ["12", "久留 佑輔",
+            ["19","20","21","22","23"]],
+
+        ["36", "安永麻乃",
+            ["19","21","22","23"]],
+
+        ["32", "松田海晴",
+            ["22","23"]],
+
+        ["15", "薦田錬",
+            ["19","20","21","22","23"]],
+
+        ["29", "廣田蒼斗",
+            ["19"]],
+
+        ["05", "梅木悠季斗",
+            ["19","20","21","22","23"]],
+
+        ["04", "後 顕路",
+            ["19","20","21","22","23"]]
+
+    ]
+
+};
+
+
+
+/* ==================================================
+   リーダー
+================================================== */
+
+let leaders = {};
+
+
+/* ==================================================
+   ログ
+================================================== */
+
+let logs = JSON.parse(
+    localStorage.getItem("festivalLogs") || "[]"
+);
+
+
+
+/* ==================================================
+   保存データ読み込み
+================================================== */
+
+const savedTeams =
+    localStorage.getItem("festivalTeams");
+
+if (savedTeams) {
+
+    teams = JSON.parse(savedTeams);
+
+}
+
+
+const savedLeaders =
+    localStorage.getItem("festivalLeaders");
+
+if (savedLeaders) {
+
+    leaders = JSON.parse(savedLeaders);
+
+}
+
+
+
+/* ==================================================
+   データ保存
+================================================== */
+
+function saveData() {
+
+    localStorage.setItem(
+        "festivalTeams",
+        JSON.stringify(teams)
+    );
+
+
+    localStorage.setItem(
+        "festivalLeaders",
+        JSON.stringify(leaders)
+    );
+
+
+    localStorage.setItem(
+        "festivalLogs",
+        JSON.stringify(logs)
+    );
+
+}
+
+
+
+/* ==================================================
+   ログ追加
+================================================== */
+
+function addLog(message) {
+
+    const now = new Date();
+
+
+    const time =
+        now.getFullYear() + "/" +
+
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0") + "/" +
+
+        String(
+            now.getDate()
+        ).padStart(2, "0") + " " +
+
+        String(
+            now.getHours()
+        ).padStart(2, "0") + ":" +
+
+        String(
+            now.getMinutes()
+        ).padStart(2, "0") + ":" +
+
+        String(
+            now.getSeconds()
+        ).padStart(2, "0");
+
+
+    logs.unshift({
+
+        time: time,
+
+        message: message
+
+    });
+
+
+    /* 最大1000件 */
+
+    if (logs.length > 1000) {
+
+        logs.pop();
+
+    }
+
+
+    localStorage.setItem(
+        "festivalLogs",
+        JSON.stringify(logs)
+    );
+
+}
+
+
+
+/* ==================================================
+   管理者画面を開く
+================================================== */
+
+function openAdmin() {
+
+    const password =
+        prompt(
+            "管理者パスワードを入力してください"
+        );
+
+
+    if (password !== "1234567890") {
+
+        alert(
+            "パスワードが違います。"
+        );
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "mainPage"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "adminPage"
+    ).style.display = "block";
+
+
+    createAdminPage();
+
+}
+
+
+
+/* ==================================================
+   管理者画面を閉じる
+================================================== */
+
+function closeAdmin() {
+
+    document.getElementById(
+        "adminPage"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "mainPage"
+    ).style.display = "block";
+
+
+    showSchedule("19");
+
+}
+
+
+
+/* ==================================================
+   管理者画面作成
+================================================== */
+
+function createAdminPage() {
+
+
+    const leaderSettings =
+        document.getElementById(
+            "leaderSettings"
+        );
+
+
+    const newTeam =
+        document.getElementById(
+            "newTeam"
+        );
+
+
+    leaderSettings.innerHTML = "";
+
+    newTeam.innerHTML = "";
+
+
+
+    for (const teamName in teams) {
+
+
+        /* =========================
+           リーダー設定
+        ========================= */
+
+        const box =
+            document.createElement(
+                "div"
+            );
+
+        box.className =
+            "adminTeam";
+
+
+        const title =
+            document.createElement(
+                "h3"
+            );
+
+        title.textContent =
+            teamName;
+
+
+        box.appendChild(title);
+
+
+
+        const select =
+            document.createElement(
+                "select"
+            );
+
+
+        select.onchange =
+            function() {
+
+
+                const oldLeader =
+                    leaders[teamName] ||
+                    "なし";
+
+
+                const newLeader =
+                    this.value ||
+                    "なし";
+
+
+                leaders[teamName] =
+                    this.value;
+
+
+                addLog(
+                    "リーダー変更："
+                    + teamName
+                    + " / "
+                    + oldLeader
+                    + " → "
+                    + newLeader
+                );
+
+
+                saveData();
+
+
+                showLogs();
+
+
+                showSchedule("19");
+
+            };
+
+
+
+        /* リーダーなし */
+
+        const none =
+            document.createElement(
+                "option"
+            );
+
+        none.value = "";
+
+        none.textContent =
+            "リーダーなし";
+
+        select.appendChild(none);
+
+
+
+        /* メンバー */
+
+        teams[teamName].forEach(
+            member => {
+
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    member[0];
+
+
+                option.textContent =
+                    member[0]
+                    + " "
+                    + member[1];
+
+
+                if (
+                    leaders[teamName]
+                    === member[0]
+                ) {
+
+                    option.selected =
+                        true;
+
+                }
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        box.appendChild(select);
+
+        leaderSettings.appendChild(box);
+
+
+
+        /* =========================
+           班選択
+        ========================= */
+
+        const teamOption =
+            document.createElement(
+                "option"
+            );
+
+
+        teamOption.value =
+            teamName;
+
+
+        teamOption.textContent =
+            teamName;
+
+
+        newTeam.appendChild(
+            teamOption
+        );
+
+    }
+
+
+    showLogs();
+
+}
+
+
+
+/* ==================================================
+   メンバー追加
+================================================== */
+
+function addMember() {
+
+
+    const number =
+        document.getElementById(
+            "newNumber"
+        ).value.trim();
+
+
+    const name =
+        document.getElementById(
+            "newName"
+        ).value.trim();
+
+
+    const team =
+        document.getElementById(
+            "newTeam"
+        ).value;
+
+
+
+    /* 参加可能日 */
+
+    const days = [];
+
+
+    document.querySelectorAll(
+        ".dayChecks input[type='checkbox']:checked"
+    ).forEach(
+        check => {
+
+            days.push(
+                check.value
+            );
+
+        }
+    );
+
+
+
+    /* 入力確認 */
+
+    if (!number || !name) {
+
+        alert(
+            "番号と名前を入力してください。"
+        );
+
+        return;
+
+    }
+
+
+
+    if (days.length === 0) {
+
+        alert(
+            "参加可能日を1つ以上選択してください。"
+        );
+
+        return;
+
+    }
+
+
+
+    /* 番号重複確認 */
+
+    for (
+        const teamName in teams
+    ) {
+
+
+        const exists =
+            teams[teamName].some(
+                member =>
+                    member[0] === number
+            );
+
+
+        if (exists) {
+
+            alert(
+                "その番号はすでに登録されています。"
+            );
+
+            return;
+
+        }
+
+    }
+
+
+
+    /* メンバー追加 */
+
+    teams[team].push([
+
+        number,
+
+        name,
+
+        days
+
+    ]);
+
+
+
+    /* ログ */
+
+    addLog(
+
+        "メンバー追加："
+        + number
+        + " "
+        + name
+        + " / "
+        + team
+        + " / 参加可能日："
+        + days.join(", ")
+
+    );
+
+
+
+    /* 保存 */
+
+    saveData();
+
+
+
+    /* 入力欄クリア */
+
+    document.getElementById(
+        "newNumber"
+    ).value = "";
+
+
+    document.getElementById(
+        "newName"
+    ).value = "";
+
+
+    document.querySelectorAll(
+        ".dayChecks input[type='checkbox']"
+    ).forEach(
+        check => {
+
+            check.checked = false;
+
+        }
+    );
+
+
+
+    alert(
+        number
+        + " "
+        + name
+        + " を追加しました。"
+    );
+
+
+
+    createAdminPage();
+
+}
+
+
+
+/* ==================================================
+   日付選択
+================================================== */
+
+function showDay(
+    day,
+    button
+) {
+
+
+    document.getElementById(
+        "selectedDate"
+    ).textContent =
+        "10月"
+        + day
+        + "日";
+
+
+
+    document.querySelectorAll(
+        ".day"
+    ).forEach(
+        btn => {
+
+            btn.classList.remove(
+                "selected"
+            );
+
+        }
+    );
+
+
+
+    if (button) {
+
+        button.classList.add(
+            "selected"
+        );
+
+    }
+
+
+
+    showSchedule(day);
+
+}
+
+
+
+/* ==================================================
+   スケジュール表示
+================================================== */
+
+function showSchedule(day) {
+
+
+    const schedule =
+        document.getElementById(
+            "schedule"
+        );
+
+
+    schedule.innerHTML = "";
+
+
+
+    for (
+        const teamName in teams
+    ) {
+
+
+        const members =
+            teams[teamName];
+
+
+
+        /* 参加できる人 */
+
+        const available =
+            members.filter(
+                member =>
+                    member[2].includes(day)
+            );
+
+
+
+        const team =
+            document.createElement(
+                "div"
+            );
+
+
+        team.className =
+            "team";
+
+
+
+        /* 班名 */
+
+        const title =
+            document.createElement(
+                "h2"
+            );
+
+
+        title.textContent =
+            teamName;
+
+
+        team.appendChild(title);
+
+
+
+        /* 人数 */
+
+        const count =
+            document.createElement(
+                "div"
+            );
+
+
+        count.className =
+            "count";
+
+
+        count.textContent =
+            available.length
+            + "人参加";
+
+
+        team.appendChild(count);
+
+
+
+        /* メンバー */
+
+        available.forEach(
+            member => {
+
+
+                const div =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                div.className =
+                    "member";
+
+
+
+                /* リーダー */
+
+                if (
+                    leaders[teamName]
+                    === member[0]
+                ) {
+
+
+                    div.classList.add(
+                        "leader"
+                    );
+
+
+                    div.textContent =
+                        "👑 "
+                        + member[0]
+                        + " "
+                        + member[1];
+
+
+                } else {
+
+
+                    div.textContent =
+                        member[0]
+                        + " "
+                        + member[1];
+
+                }
+
+
+
+                team.appendChild(div);
+
+            }
+        );
+
+
+
+        /* 誰もいない */
+
+        if (
+            available.length === 0
+        ) {
+
+
+            const none =
+                document.createElement(
+                    "p"
+                );
+
+
+            none.textContent =
+                "参加者なし";
+
+
+            team.appendChild(none);
+
+        }
+
+
+
+        schedule.appendChild(team);
+
+    }
+
+}
+
+
+
+/* ==================================================
+   ログ表示
+================================================== */
+
+function showLogs() {
+
+
+    const logList =
+        document.getElementById(
+            "logList"
+        );
+
+
+    if (!logList) {
+
+        return;
+
+    }
+
+
+    logList.innerHTML = "";
+
+
+
+    if (logs.length === 0) {
+
+
+        logList.innerHTML =
+            "<p>まだ操作ログはありません。</p>";
+
+
+        return;
+
+    }
+
+
+
+    logs.forEach(
+        log => {
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "log";
+
+
+            div.innerHTML =
+
+                '<div class="logTime">'
+                + escapeHTML(log.time)
+                + '</div>'
+
+                +
+
+                '<div class="logMessage">'
+                + escapeHTML(log.message)
+                + '</div>';
+
+
+            logList.appendChild(div);
+
+        }
+    );
+
+}
+
+
+
+/* ==================================================
+   HTMLエスケープ
+================================================== */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+}
+
+
+
+/* ==================================================
+   ログ全削除
+================================================== */
+
+function clearLogs() {
+
+
+    if (
+        !confirm(
+            "操作ログをすべて削除しますか？"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+
+    logs = [];
+
+
+    localStorage.setItem(
+        "festivalLogs",
+        JSON.stringify(logs)
+    );
+
+
+    showLogs();
+
+}
+
+
+
+/* ==================================================
+   最初の表示
+================================================== */
+
+showSchedule("19");
+
+</script>
+
+</body>
+</html>

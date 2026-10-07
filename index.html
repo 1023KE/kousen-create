@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="app-version" content="2026-10-07-2">
 
 <title>高専祭 組立スケジュール</title>
 
@@ -527,19 +526,6 @@ input[type="text"] {
 
 
 <script>
-/* ==================================================
-   最新版を取得するためのService Worker登録
-================================================== */
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-        navigator.serviceWorker.register("./sw.js", {
-            updateViaCache: "none"
-        }).catch(function (error) {
-            console.log("Service Worker登録失敗:", error);
-        });
-    });
-}
-
 
 
 /* ==================================================
@@ -689,62 +675,102 @@ let leaders = {};
    ログ
 ================================================== */
 
-let logs = JSON.parse(
-    localStorage.getItem("festivalLogs") || "[]"
-);
+/* ==================================================
+   共有データ（Google Apps Script）
+================================================== */
 
+const DATA_API_URL = "https://script.google.com/macros/s/AKfycbzlMZDw6R5nHIeG3-5GUCJh56Cp4hkimDnxTG_m8DLjUW6obVLfn264aeAWYiHfN1qkoQ/exec";
+
+let logs = [];
 
 
 /* ==================================================
-   保存データ読み込み
+   共有データ読み込み
 ================================================== */
 
-const savedTeams =
-    localStorage.getItem("festivalTeams");
+async function loadSharedData() {
 
-if (savedTeams) {
+    try {
 
-    teams = JSON.parse(savedTeams);
+        const response = await fetch(DATA_API_URL, {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        if (data && data.teams) {
+
+            teams = data.teams;
+            leaders = data.leaders || {};
+            logs = data.logs || [];
+
+        } else {
+
+            // 共有データがまだない場合は、HTML内の初期データを使用して保存
+            await saveData();
+
+        }
+
+    } catch (error) {
+
+        console.error("共有データの読み込みに失敗しました:", error);
+
+        alert(
+            "共有データを読み込めませんでした。\n" +
+            "Google Apps Scriptの設定を確認してください。"
+        );
+
+    }
 
 }
-
-
-const savedLeaders =
-    localStorage.getItem("festivalLeaders");
-
-if (savedLeaders) {
-
-    leaders = JSON.parse(savedLeaders);
-
-}
-
 
 
 /* ==================================================
-   データ保存
+   共有データ保存
 ================================================== */
 
-function saveData() {
+async function saveData() {
 
-    localStorage.setItem(
-        "festivalTeams",
-        JSON.stringify(teams)
-    );
+    try {
 
+        const response = await fetch(DATA_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify({
+                teams: teams,
+                leaders: leaders,
+                logs: logs
+            })
+        });
 
-    localStorage.setItem(
-        "festivalLeaders",
-        JSON.stringify(leaders)
-    );
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
 
+        const result = await response.json();
 
-    localStorage.setItem(
-        "festivalLogs",
-        JSON.stringify(logs)
-    );
+        if (!result.success) {
+            throw new Error("保存に失敗しました");
+        }
+
+    } catch (error) {
+
+        console.error("共有データの保存に失敗しました:", error);
+
+        alert(
+            "変更を共有データに保存できませんでした。\n" +
+            "Google Apps Scriptの設定を確認してください。"
+        );
+
+    }
 
 }
-
 
 
 /* ==================================================
@@ -787,10 +813,7 @@ function addLog(message) {
         message: message
 
     });
-    localStorage.setItem(
-        "festivalLogs",
-        JSON.stringify(logs)
-    );
+    saveData();
 
 }
 
@@ -1693,12 +1716,7 @@ function clearLogs() {
     logs = [];
 
 
-    localStorage.setItem(
-        "festivalLogs",
-        JSON.stringify(logs)
-    );
-
-
+    saveData();
     showLogs();
 
 }
@@ -1709,7 +1727,9 @@ function clearLogs() {
    最初の表示
 ================================================== */
 
-showSchedule("19");
+loadSharedData().then(() => {
+    showSchedule("19");
+});
 
 </script>
 

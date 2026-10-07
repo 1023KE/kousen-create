@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-version" content="2026-10-07-2">
 
 <title>高専祭 組立スケジュール</title>
 
@@ -526,6 +527,19 @@ input[type="text"] {
 
 
 <script>
+/* ==================================================
+   最新版を取得するためのService Worker登録
+================================================== */
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js", {
+            updateViaCache: "none"
+        }).catch(function (error) {
+            console.log("Service Worker登録失敗:", error);
+        });
+    });
+}
+
 
 
 /* ==================================================

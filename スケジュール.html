@@ -1096,14 +1096,9 @@ function showMemberManagement() {
 
                 const selectedDays = [];
 
-                days.querySelectorAll("input:checked").forEach(check => {
+                days.querySelectorAll("input:checked").forEach(check => {!
                     selectedDays.push(check.value);
                 });
-
-                if (selectedDays.length === 0) {
-                    alert("参加可能日を1つ以上選択してください。");
-                    return;
-                }
 
                 const oldDays = member[2].slice();
                 member[2] = selectedDays;
@@ -1430,7 +1425,7 @@ function showSchedule(day) {
         const available =
             members.filter(
                 member =>
-                    member[2].includes(day)
+                    !member[2].includes(day)
             );
 
 

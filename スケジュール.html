@@ -489,6 +489,16 @@ input[type="text"] {
     </div>
 
 
+    <!-- ==================================================
+         メンバー管理
+    ================================================== -->
+
+    <div class="adminBox">
+        <h2>👥 メンバー管理</h2>
+        <p>既存メンバーの参加可能日を変更したり、削除できます。</p>
+        <div id="memberManagement"></div>
+    </div>
+
 
     <!-- ==================================================
          操作ログ
@@ -763,17 +773,6 @@ function addLog(message) {
         message: message
 
     });
-
-
-    /* 最大1000件 */
-
-    if (logs.length > 1000) {
-
-        logs.pop();
-
-    }
-
-
     localStorage.setItem(
         "festivalLogs",
         JSON.stringify(logs)
@@ -1033,7 +1032,144 @@ function createAdminPage() {
 
 
     showLogs();
+    showMemberManagement();
 
+}
+
+
+
+/* ==================================================
+   メンバー管理
+================================================== */
+
+function showMemberManagement() {
+
+    const container = document.getElementById("memberManagement");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    for (const teamName in teams) {
+
+        const heading = document.createElement("h3");
+        heading.textContent = teamName;
+        container.appendChild(heading);
+
+        teams[teamName].forEach(member => {
+
+            const box = document.createElement("div");
+            box.className = "memberManage";
+
+            const info = document.createElement("div");
+            info.className = "memberInfo";
+            info.textContent = member[0] + " " + member[1];
+
+            const days = document.createElement("div");
+            days.className = "memberDays";
+
+            ["19","20","21","22","23"].forEach(day => {
+
+                const label = document.createElement("label");
+                label.style.marginRight = "12px";
+                label.style.display = "inline-block";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = day;
+                checkbox.checked = member[2].includes(day);
+
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(" " + day + "日"));
+                days.appendChild(label);
+
+            });
+
+            const buttons = document.createElement("div");
+            buttons.className = "memberManageButtons";
+
+            const editButton = document.createElement("button");
+            editButton.className = "editButton";
+            editButton.textContent = "予定を変更";
+
+            editButton.onclick = function() {
+
+                const selectedDays = [];
+
+                days.querySelectorAll("input:checked").forEach(check => {
+                    selectedDays.push(check.value);
+                });
+
+                if (selectedDays.length === 0) {
+                    alert("参加可能日を1つ以上選択してください。");
+                    return;
+                }
+
+                const oldDays = member[2].slice();
+                member[2] = selectedDays;
+
+                addLog(
+                    "参加可能日変更：" +
+                    member[0] + " " + member[1] +
+                    " / " + oldDays.join(", ") +
+                    " → " + selectedDays.join(", ")
+                );
+
+                saveData();
+                createAdminPage();
+                showSchedule("19");
+
+                alert(member[0] + " " + member[1] + " の予定を変更しました。");
+            };
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "deleteButton";
+            deleteButton.textContent = "削除";
+
+            deleteButton.onclick = function() {
+
+                if (!confirm(member[0] + " " + member[1] + " を削除しますか？")) {
+                    return;
+                }
+
+                const index = teams[teamName].indexOf(member);
+                if (index === -1) return;
+
+                teams[teamName].splice(index, 1);
+
+                if (leaders[teamName] === member[0]) {
+                    const oldLeader = leaders[teamName];
+                    leaders[teamName] = "";
+
+                    addLog(
+                        "メンバー削除によりリーダー解除：" +
+                        teamName + " / " + oldLeader
+                    );
+                }
+
+                addLog(
+                    "メンバー削除：" +
+                    member[0] + " " + member[1] +
+                    " / " + teamName
+                );
+
+                saveData();
+                createAdminPage();
+                showSchedule("19");
+
+                alert(member[0] + " " + member[1] + " を削除しました。");
+            };
+
+            buttons.appendChild(editButton);
+            buttons.appendChild(deleteButton);
+
+            box.appendChild(info);
+            box.appendChild(days);
+            box.appendChild(buttons);
+
+            container.appendChild(box);
+        });
+    }
 }
 
 

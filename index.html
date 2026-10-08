@@ -236,6 +236,52 @@ input[type="text"] {
     margin-bottom: 15px;
 }
 
+.noticeContent {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.noticeTime {
+    margin-top: 8px;
+    color: #777;
+    font-size: 12px;
+}
+
+.noticeEditor {
+    width: 100%;
+    max-width: 700px;
+    min-height: 120px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    background: white;
+    line-height: 1.6;
+    outline: none;
+}
+
+.noticeEditor:focus {
+    border-color: #888;
+}
+
+.noticeToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.noticeToolbar button {
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    background: white;
+    cursor: pointer;
+}
+
+.noticeToolbar button:hover {
+    background: #eee;
+}
+
 
 /* =========================
    スマホ対応
@@ -383,13 +429,24 @@ input[type="text"] {
         <h2>📢 連絡</h2>
         <p>ここに入力した内容が、みんなの画面に表示されます。</p>
 
-        <textarea
-            id="noticeInput"
-            placeholder="例：10/19は13:00に集合してください。"
-            style="width:100%; max-width:700px; min-height:100px; padding:10px; border:1px solid #ccc; border-radius:7px; resize:vertical;"
-        ></textarea>
+        <div class="noticeToolbar">
+            <button type="button" onclick="formatNotice('bold')"><b>太字</b></button>
+            <button type="button" onclick="formatNotice('fontSize','2')">小</button>
+            <button type="button" onclick="formatNotice('fontSize','4')">中</button>
+            <button type="button" onclick="formatNotice('fontSize','6')">大</button>
+            <button type="button" onclick="formatNotice('removeFormat')">書式解除</button>
+        </div>
 
-        <br>
+        <div
+            id="noticeInput"
+            class="noticeEditor"
+            contenteditable="true"
+            data-placeholder="例：10/19は13:00に集合してください。"
+        ></div>
+
+        <p style="color:#777; font-size:13px;">
+            Enterで改行できます。太字・文字サイズも設定できます。
+        </p>
 
         <button class="addButton" onclick="saveNotice()">
             連絡を更新
@@ -694,6 +751,7 @@ let teams = {
 
 let leaders = {};
 let notice = "";
+let noticeTime = "";
 
 
 /* ==================================================
@@ -704,7 +762,7 @@ let notice = "";
    共有データ（Google Apps Script）
 ================================================== */
 
-const DATA_API_URL = "https://script.google.com/a/macros/st.omu.ac.jp/s/AKfycbzlMZDw6R5nHIeG3-5GUCJh56Cp4hkimDnxTG_m8DLjUW6obVLfn264aeAWYiHfN1qkoQ/exec";
+const DATA_API_URL = "https://script.google.com/macros/s/AKfycbzlMZDw6R5nHIeG3-5GUCJh56Cp4hkimDnxTG_m8DLjUW6obVLfn264aeAWYiHfN1qkoQ/exec";
 
 let logs = [];
 
@@ -733,6 +791,7 @@ async function loadSharedData() {
             leaders = data.leaders || {};
             logs = data.logs || [];
             notice = data.notice || "";
+            noticeTime = data.noticeTime || "";
 
         } else {
 
@@ -772,7 +831,8 @@ async function saveData() {
                 teams: teams,
                 leaders: leaders,
                 logs: logs,
-                notice: notice
+                notice: notice,
+                noticeTime: noticeTime
             })
         });
 
@@ -1107,17 +1167,74 @@ function createAdminPage() {
    連絡
 ================================================== */
 
+function formatNotice(command, value = null) {
+
+    const input = document.getElementById("noticeInput");
+
+    if (!input) return;
+
+    input.focus();
+    document.execCommand(command, false, value);
+
+}
+
+
 function saveNotice() {
 
     const input = document.getElementById("noticeInput");
 
-    notice = input.value.trim();
+    notice = input.innerHTML.trim();
+
+    // 空の連絡をきれいにする
+    if (notice === "<br>") {
+        notice = "";
+    }
+
+    noticeTime = new Date().toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 
     saveData();
-
     showNotice();
 
     alert("連絡を更新しました。");
+}
+
+
+function sanitizeNotice(html) {
+
+    const template = document.createElement("template");
+    template.innerHTML = html || "";
+
+    const allowed = new Set(["B", "STRONG", "BR", "DIV", "P", "SPAN", "FONT"]);
+
+    function clean(node) {
+        [...node.childNodes].forEach(child => {
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                if (!allowed.has(child.tagName)) {
+                    const text = document.createTextNode(child.textContent || "");
+                    child.replaceWith(text);
+                    return;
+                }
+
+                [...child.attributes].forEach(attr => {
+                    if (child.tagName === "FONT" && attr.name === "size") return;
+                    if (child.tagName === "SPAN" && attr.name === "style" && /^font-size\s*:/i.test(attr.value)) return;
+                    child.removeAttribute(attr.name);
+                });
+
+                clean(child);
+            }
+        });
+    }
+
+    clean(template.content);
+    return template.innerHTML;
 }
 
 
@@ -1128,15 +1245,17 @@ function showNotice() {
     if (!box) return;
 
     if (!notice) {
-
         box.style.display = "none";
-        box.textContent = "";
-
+        box.innerHTML = "";
         return;
     }
 
     box.style.display = "block";
-    box.textContent = "📢 " + notice;
+    box.innerHTML =
+        '<div class="noticeContent">📢 ' +
+        sanitizeNotice(notice) +
+        '</div>' +
+        (noticeTime ? '<div class="noticeTime">投稿：' + noticeTime + '</div>' : '');
 }
 
 
@@ -1145,7 +1264,7 @@ function loadNoticeInput() {
     const input = document.getElementById("noticeInput");
 
     if (input) {
-        input.value = notice || "";
+        input.innerHTML = sanitizeNotice(notice || "");
     }
 }
 

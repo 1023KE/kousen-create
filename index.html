@@ -297,6 +297,8 @@ input[type="text"] {
         10月19日
     </p>
 
+    <div class="notice" id="publicNotice" style="display:none;"></div>
+
 
     <!-- 日付 -->
 
@@ -371,6 +373,28 @@ input[type="text"] {
 
     </div>
 
+
+
+    <!-- ==================================================
+         連絡
+    ================================================== -->
+
+    <div class="adminBox">
+        <h2>📢 連絡</h2>
+        <p>ここに入力した内容が、みんなの画面に表示されます。</p>
+
+        <textarea
+            id="noticeInput"
+            placeholder="例：10/19は13:00に集合してください。"
+            style="width:100%; max-width:700px; min-height:100px; padding:10px; border:1px solid #ccc; border-radius:7px; resize:vertical;"
+        ></textarea>
+
+        <br>
+
+        <button class="addButton" onclick="saveNotice()">
+            連絡を更新
+        </button>
+    </div>
 
 
     <!-- ==================================================
@@ -669,6 +693,7 @@ let teams = {
 ================================================== */
 
 let leaders = {};
+let notice = "";
 
 
 /* ==================================================
@@ -707,6 +732,7 @@ async function loadSharedData() {
             teams = data.teams;
             leaders = data.leaders || {};
             logs = data.logs || [];
+            notice = data.notice || "";
 
         } else {
 
@@ -745,7 +771,8 @@ async function saveData() {
             body: JSON.stringify({
                 teams: teams,
                 leaders: leaders,
-                logs: logs
+                logs: logs,
+                notice: notice
             })
         });
 
@@ -1070,9 +1097,57 @@ function createAdminPage() {
 
     showLogs();
     showMemberManagement();
+    loadNoticeInput();
 
 }
 
+
+
+/* ==================================================
+   連絡
+================================================== */
+
+function saveNotice() {
+
+    const input = document.getElementById("noticeInput");
+
+    notice = input.value.trim();
+
+    saveData();
+
+    showNotice();
+
+    alert("連絡を更新しました。");
+}
+
+
+function showNotice() {
+
+    const box = document.getElementById("publicNotice");
+
+    if (!box) return;
+
+    if (!notice) {
+
+        box.style.display = "none";
+        box.textContent = "";
+
+        return;
+    }
+
+    box.style.display = "block";
+    box.textContent = "📢 " + notice;
+}
+
+
+function loadNoticeInput() {
+
+    const input = document.getElementById("noticeInput");
+
+    if (input) {
+        input.value = notice || "";
+    }
+}
 
 
 /* ==================================================
@@ -1729,6 +1804,7 @@ function clearLogs() {
 
 loadSharedData().then(() => {
     showSchedule("19");
+    showNotice();
 });
 
 </script>
